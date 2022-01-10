@@ -1,5 +1,10 @@
 html,
 body {
+  --token-b46d5469-5e48-45a4-826f-df2dbce8f1ea: rgb(255, 255, 255);
+  --token-f2df3369-ca66-42fc-a20b-b8122d27ef08: rgb(14, 28, 54);
+  --token-68fc4665-f010-49ba-9f81-1a4fe5f5c702: rgb(255, 237, 225);
+  --token-259b51b6-951c-46e9-b2ca-a5adc92b3039: rgb(255, 255, 255);
+  --token-874b3b2b-2d42-4907-8684-1ded9a50ab54: rgb(215, 249, 255);
   padding: 0;
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
