@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity ^0.8.3;
 
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
-import '@openzeppelin/contracts/utils/Counters.sol';
-import 'hardhat/console.sol';
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
+import "hardhat/console.sol";
 
 contract TodoList is ReentrancyGuard {
     using Counters for Counters.Counter;
     Counters.Counter private _itemIds;
     Counters.Counter private _itemsSold;
 
-    constructor() {}
+    address private owner;
+
+    constructor() {
+        owner = msg.sender;
+    }
 
     struct TodoItem {
         uint256 todoId;
@@ -41,7 +45,7 @@ contract TodoList is ReentrancyGuard {
             payable(msg.sender),
             msg.value
         );
-        console.log('item id %s', itemId);
+        console.log("item id %s", itemId);
         _itemIds.increment();
         emit TodoCreated(itemId);
     }
@@ -85,15 +89,15 @@ contract TodoList is ReentrancyGuard {
             if (idToTodo[i].todoId == todoId) {
                 require(
                     msg.sender == idToTodo[i].creator,
-                    'sender is not creator'
+                    "sender is not creator"
                 );
                 require(
                     idToTodo[i].finished == false,
-                    'todo is already marked as finshed'
+                    "todo is already marked as finshed"
                 );
                 idToTodo[i].finished = true;
                 payable(msg.sender).transfer(idToTodo[i].amount);
-                console.log('%i amount sent', idToTodo[i].amount);
+                console.log("%i amount sent", idToTodo[i].amount);
                 emit TodoCompleted();
                 break;
             }

@@ -1,101 +1,100 @@
-import { ethers } from "ethers";
-import Button from "https://framer.com/m/button-vlMc.js@q3t5pIcNBXry1ShloyxA";
-import TaskItem from "https://framer.com/m/TaskItem-rhHA.js@DFYHJPZno8Uh6e69ZFqr";
-import { useCallback, useEffect, useState } from "react";
+import { BigNumber, BigNumberish, ethers, Signer } from "ethers";
+import Button from "https://framer.com/m/button-vlMc.js@QqXPUYujrYSTur0ZBQZB";
+import ConnectButton from "https://framer.com/m/ConnectButton-hZwk.js@5WIS86gv7HqixaiIF1Wy";
+import TaskItem from "https://framer.com/m/TaskItem-rhHA.js@40N5yL4YHssDVmkb1FmN";
+import { useEffect, useState } from "react";
 import { match } from "ts-pattern";
-import { TodoList__factory } from "../types/ethers-contracts";
-
+import { useAccount, useConnect, useContract, useContractRead } from "wagmi";
+import { contractAddress } from "../config";
 import styles from "../styles/Home.module.css";
+import { TodoList, TodoList__factory } from "../typechain-types";
 import type { TodoItemStruct } from "../types/ethers-contracts/TodoList";
+import MM from "../components/MM";
 
-type Status = "connect-wallet" | "ready";
-const TODO_LIST_ADDRESS = "0x687543a4a272287741E6758153AfB4e2836D205A";
+// const TODO_LIST_ADDRESS = "0x687543a4a272287741E6758153AfB4e2836D205A";
 
 const Home = () => {
-  const [currAcc, setCurrAcc] = useState("");
+  const [signer, setSigner] = useState<Signer>();
   const [newTask, setNewTask] = useState<{ title: string; amount: string }>({
     title: "",
     amount: "",
   });
-  const [status, setStatus] = useState<Status>("connect-wallet");
-  const [list, setList] = useState<TodoItemStruct[]>([]);
   const [isEditing, toggleEditing] = useState<boolean>(false);
 
-  const todoList = useCallback(() => {
-    const provider = () => new ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider().getSigner();
-    return new TodoList__factory().connect(signer).attach(TODO_LIST_ADDRESS);
-  }, []);
+  const [{ data: connectData, loading: connectLoading }, connect] =
+    useConnect();
+  const [{ data: accountData }, disconnect] = useAccount({});
+
+  const contract = useContract<TodoList>({
+    addressOrName: contractAddress,
+    contractInterface: TodoList__factory.abi,
+    signerOrProvider: signer,
+  });
+
+  const [{ data: todosData, error, loading }, read] = useContractRead<TodoList>(
+    {
+      signerOrProvider: signer,
+      addressOrName: contractAddress,
+      contractInterface: TodoList__factory.abi,
+    },
+    "fetchUnfinishedTodos",
+    {
+      skip: !signer,
+    }
+  );
 
   const addTodo = async () => {
-    const tx = await todoList().createTodo(newTask.title, {
-      value: ethers.utils.parseEther(newTask.amount),
+    const tx = await contract.createTodo(newTask.title, {
+      value: ethers.utils.parseEther(newTask.amount.toString()),
     });
     await tx.wait();
-    todoList().on("TodoCreated", async (event) => {
-      setList(await todoList().fetchUnfinishedTodos());
+    contract.on("TodoCreated", async (event) => {
+      read();
     });
   };
 
-  const connectWallet = async () => {
-    const { ethereum } = window;
-
-    if (!ethereum) {
-      alert("get MetaMask");
-    }
-
-    try {
-      const acc = await ethereum.request({ method: "eth_requestAccounts" });
-      setCurrAcc(acc[0]);
-      setStatus("ready");
-    } catch (error) {
-      console.log(error);
-    }
+  const handleComplete = async (id: BigNumberish) => {
+    const tx = await contract.completeTodo(id);
+    await tx.wait();
+    contract.on("TodoCompleted", async (event) => {
+      read();
+    });
   };
 
   useEffect(() => {
-    hasWallet();
-  }, []);
-
-  const hasWallet = () => {
-    const { ethereum } = window;
-    if (!ethereum) {
-      console.log("Make sure to use Metamask");
-      return;
+    if (connectData.connector?.ready) {
+      (async () => {
+        const s = await connectData.connector?.getSigner();
+        setSigner(s);
+        read();
+      })();
     }
-    ethereum.request({ method: "eth_accounts" }).then((acc: string[]) => {
-      if (acc.length !== 0) {
-        setCurrAcc(acc[0]);
-        setStatus("ready");
-        todoList()
-          .fetchUnfinishedTodos()
-          .then((todos) => {
-            setList(todos);
-            console.log(todos);
-          });
-      }
-    });
-  };
+  }, [connectData.connector]);
 
   return (
     <div className={styles.container}>
-      {match(status)
-        .with("connect-wallet", () => (
-          <div className={styles.container}>
-            <h1>TodoList</h1>
-            <Button onClick={connectWallet}>Connect Wallet</Button>
-          </div>
-        ))
-        .with("ready", () => (
+      {match([connectData.connected, connectLoading])
+        .with([true, false], () => (
           <div className={styles.list}>
             <h1>TodoList</h1>
-            {list.map((item) => (
+            <div>
+              <div>
+                {accountData?.ens?.name
+                  ? `${accountData.ens?.name} (${accountData.address})`
+                  : accountData?.address.slice(0, 8).concat("...")}
+              </div>
+              <div>Connected to {accountData?.connector?.name}</div>
+              <MM />
+              <button onClick={disconnect}>Disconnect</button>
+            </div>
+            {todosData?.map((item: TodoItemStruct) => (
               <TaskItem
-                tap={() => {
-                  todoList().completeTodo(item.todoId);
+                onClick={() => {
+                  handleComplete(item.todoId);
                 }}
-                key={item.title}
+                key={item.todoId}
                 title={item.title}
+                amount={1}
               />
             ))}
             {isEditing ? (
@@ -120,6 +119,9 @@ const Home = () => {
               />
             ) : (
               <Button
+                style={{
+                  marginTop: "auto",
+                }}
                 title="Add Task"
                 tap={() => {
                   toggleEditing(true);
@@ -128,7 +130,25 @@ const Home = () => {
             )}
           </div>
         ))
-        .exhaustive()}
+        .otherwise(() => (
+          <>
+            <h1>TodoList</h1>
+            <div
+              style={{
+                display: "flex",
+                alignSelf: "stretch",
+              }}
+            >
+              {connectData.connectors.map((connector) => (
+                <ConnectButton
+                  variant={connector.name}
+                  key={connector.id}
+                  onClick={() => connect(connector)}
+                />
+              ))}
+            </div>
+          </>
+        ))}
     </div>
   );
 };
