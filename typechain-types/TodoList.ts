@@ -54,6 +54,7 @@ export interface TodoListInterface extends utils.Interface {
   functions: {
     "completeTodo(uint256)": FunctionFragment;
     "createTodo(string)": FunctionFragment;
+    "fetchTodo(uint256)": FunctionFragment;
     "fetchUnfinishedTodos()": FunctionFragment;
     "findTodo(uint256)": FunctionFragment;
   };
@@ -62,6 +63,7 @@ export interface TodoListInterface extends utils.Interface {
     nameOrSignatureOrTopic:
       | "completeTodo"
       | "createTodo"
+      | "fetchTodo"
       | "fetchUnfinishedTodos"
       | "findTodo"
   ): FunctionFragment;
@@ -71,6 +73,10 @@ export interface TodoListInterface extends utils.Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "createTodo", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "fetchTodo",
+    values: [BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "fetchUnfinishedTodos",
     values?: undefined
@@ -85,6 +91,7 @@ export interface TodoListInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "createTodo", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "fetchTodo", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "fetchUnfinishedTodos",
     data: BytesLike
@@ -156,6 +163,11 @@ export interface TodoList extends BaseContract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    fetchTodo(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[TodoList.TodoItemStructOutput]>;
+
     fetchUnfinishedTodos(
       overrides?: CallOverrides
     ): Promise<[TodoList.TodoItemStructOutput[]]>;
@@ -176,6 +188,11 @@ export interface TodoList extends BaseContract {
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  fetchTodo(
+    id: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<TodoList.TodoItemStructOutput>;
+
   fetchUnfinishedTodos(
     overrides?: CallOverrides
   ): Promise<TodoList.TodoItemStructOutput[]>;
@@ -192,6 +209,11 @@ export interface TodoList extends BaseContract {
     ): Promise<void>;
 
     createTodo(title: string, overrides?: CallOverrides): Promise<void>;
+
+    fetchTodo(
+      id: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<TodoList.TodoItemStructOutput>;
 
     fetchUnfinishedTodos(
       overrides?: CallOverrides
@@ -225,6 +247,8 @@ export interface TodoList extends BaseContract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    fetchTodo(id: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+
     fetchUnfinishedTodos(overrides?: CallOverrides): Promise<BigNumber>;
 
     findTodo(id: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
@@ -239,6 +263,11 @@ export interface TodoList extends BaseContract {
     createTodo(
       title: string,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    fetchTodo(
+      id: BigNumberish,
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     fetchUnfinishedTodos(

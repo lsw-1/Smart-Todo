@@ -55,6 +55,11 @@ contract TodoList is ReentrancyGuard {
         return item;
     }
 
+    function fetchTodo(uint256 id) public view returns (TodoItem memory) {
+        TodoItem memory item = idToTodo[id];
+        return item;
+    }
+
     function fetchUnfinishedTodos() public view returns (TodoItem[] memory) {
         uint256 totalItemCount = _itemIds.current();
         uint256 itemCount = 0;

@@ -9,16 +9,18 @@
     "tc": "typechain --target ethers-v5 artifacts/contracts/TodoList.sol/TodoList.json"
   },
   "dependencies": {
-    "@react-three/fiber": "^7.0.26",
-    "ethers": "^5.6.1",
-    "framer": "^2.1.0",
-    "framer-motion": "^6.2.8",
+    "@react-three/fiber": "^8.0.12",
+    "ethers": "^5.6.5",
+    "framer": "^2.1.1",
+    "framer-motion": "^6.3.0",
+    "iron-session": "^6.1.2",
     "next": "^12.1.0",
     "react": "17.0.2",
     "react-dom": "17.0.2",
-    "three": "^0.138.3",
+    "siwe": "^1.1.6",
+    "three": "^0.139.2",
     "ts-pattern": "^3.3.5",
-    "wagmi": "^0.2.21"
+    "wagmi": "^0.4.0"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.5",
